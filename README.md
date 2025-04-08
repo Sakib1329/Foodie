@@ -1,16 +1,49 @@
-# foodie
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'auth_controller.dart';
 
-A new Flutter project.
+class SignUpScreen extends StatelessWidget {
+  final controller = Get.put(AuthController());
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Sign Up')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Obx(() => GestureDetector(
+              onTap: controller.pickImage,
+              child: CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.grey[300],
+                child: controller.imageBase64.isEmpty
+                    ? Icon(Icons.add_a_photo)
+                    : Icon(Icons.check, color: Colors.green),
+              ),
+            )),
+            TextField(
+              decoration: InputDecoration(labelText: 'Username'),
+              onChanged: (val) => controller.username.value = val,
+            ),
+            TextField(
+              decoration: InputDecoration(labelText: 'Email'),
+              onChanged: (val) => controller.email.value = val,
+            ),
+            TextField(
+              decoration: InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              onChanged: (val) => controller.password.value = val,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: controller.signUp,
+              child: Text('Sign Up'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
