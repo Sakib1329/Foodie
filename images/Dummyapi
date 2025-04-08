@@ -1,0 +1,75 @@
+import 'dart:convert';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:get_storage/get_storage.dart';
+
+class LoginController extends GetxController {
+  var isLoading = false.obs;
+  final box = GetStorage();
+
+  Future<void> login(String email, String password) async {
+    isLoading.value = true;
+
+    final url = Uri.parse('https://dummyjson.com/auth/login'); // Dummy JSON login endpoint
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      isLoading.value = false;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Check if the response contains the token
+        if (data['accessToken'] != null) {
+          String token = data['accessToken'];
+          box.write('accessToken', token);
+          Get.snackbar('Success', 'Login successful');
+          fetchUserInfo(); // You can fetch user info after login
+        } else {
+          Get.snackbar('Error', 'Token not found');
+        }
+      } else {
+        Get.snackbar('Error', 'Login failed');
+      }
+    } catch (e) {
+      isLoading.value = false;
+      Get.snackbar('Error', 'An error occurred: $e');
+    }
+  }
+
+  Future<void> fetchUserInfo() async {
+    String? token = box.read('accessToken');
+    if (token == null) {
+      Get.snackbar('Error', 'No token found');
+      return;
+    }
+
+    final url = Uri.parse('https://dummyjson.com/user'); // Replace with the actual endpoint to fetch user info
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        print('User Info: $userData'); // Print or use the user data here
+      } else {
+        Get.snackbar('Error', 'Failed to fetch user info');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'An error occurred while fetching user info: $e');
+    }
+  }
+}
