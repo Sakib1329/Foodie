@@ -1,43 +1,23 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
-class AuthController extends GetxController {
-  var username = ''.obs;
-  var email = ''.obs;
-  var password = ''.obs;
-  var imageBase64 = ''.obs;
+Future<void> uploadImage(File imageFile) async {
+  var uri = Uri.parse("https://yourapi.com/upload");
+  
+  var request = http.MultipartRequest('POST', uri);
+  request.headers['Authorization'] = 'Bearer your_token_here'; // Optional
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      'photo',               // field name expected by the server
+      imageFile.path,
+    ),
+  );
 
-  final ImagePicker picker = ImagePicker();
+  var response = await request.send();
 
-  Future<void> pickImage() async {
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      final bytes = await File(picked.path).readAsBytes();
-      imageBase64.value = base64Encode(bytes);
-    }
-  }
-
-  Future<void> signUp() async {
-    final url = Uri.parse('https://yourapi.com/signup');
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': username.value,
-        'email': email.value,
-        'password': password.value,
-        'profile_pic': imageBase64.value,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      Get.snackbar('Success', 'Signed up successfully!');
-    } else {
-      Get.snackbar('Error', 'Signup failed!');
-    }
+  if (response.statusCode == 200) {
+    print("Upload successful!");
+  } else {
+    print("Upload failed: ${response.statusCode}");
   }
 }
