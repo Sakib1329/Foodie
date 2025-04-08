@@ -1,49 +1,43 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'package:get/get.dart';
-import 'auth_controller.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 
-class SignUpScreen extends StatelessWidget {
-  final controller = Get.put(AuthController());
+class AuthController extends GetxController {
+  var username = ''.obs;
+  var email = ''.obs;
+  var password = ''.obs;
+  var imageBase64 = ''.obs;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Sign Up')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Obx(() => GestureDetector(
-              onTap: controller.pickImage,
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.grey[300],
-                child: controller.imageBase64.isEmpty
-                    ? Icon(Icons.add_a_photo)
-                    : Icon(Icons.check, color: Colors.green),
-              ),
-            )),
-            TextField(
-              decoration: InputDecoration(labelText: 'Username'),
-              onChanged: (val) => controller.username.value = val,
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: 'Email'),
-              onChanged: (val) => controller.email.value = val,
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-              onChanged: (val) => controller.password.value = val,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: controller.signUp,
-              child: Text('Sign Up'),
-            ),
-          ],
-        ),
-      ),
+  final ImagePicker picker = ImagePicker();
+
+  Future<void> pickImage() async {
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      final bytes = await File(picked.path).readAsBytes();
+      imageBase64.value = base64Encode(bytes);
+    }
+  }
+
+  Future<void> signUp() async {
+    final url = Uri.parse('https://yourapi.com/signup');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': username.value,
+        'email': email.value,
+        'password': password.value,
+        'profile_pic': imageBase64.value,
+      }),
     );
+
+    if (response.statusCode == 200) {
+      Get.snackbar('Success', 'Signed up successfully!');
+    } else {
+      Get.snackbar('Error', 'Signup failed!');
+    }
   }
 }
